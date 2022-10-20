@@ -1,4 +1,4 @@
-package parse
+package main
 
 import (
 	"regexp"
@@ -30,4 +30,12 @@ func findComments(data string, fileType lang) []string {
 	}
 
 	return comments
+}
+
+func ParseLine() {
+
+}
+
+func LineByLine() {
+
 }
