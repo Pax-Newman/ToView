@@ -1,4 +1,4 @@
-package main
+package parse
 
 import (
 	"bufio"
@@ -7,12 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 )
-
-type language struct {
-	inline     string
-	blockStart string
-	blockEnd   string
-}
 
 type item struct {
 	title    string
@@ -37,9 +31,7 @@ func LineByLine(path string) [][]item {
 	defer file.Close()
 
 	filetype := filepath.Ext(path)
-
-	// FIXME get language from filetype
-	lang := language{}
+	lang := languages[filetype]
 
 	// create a new scanner and comment parser
 	scanner := bufio.NewScanner(file)
