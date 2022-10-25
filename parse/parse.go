@@ -3,6 +3,7 @@ package parse
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -34,7 +35,8 @@ func LineByLine(path string) ([][]item, error) {
 	filetype := filepath.Ext(path)
 	lang := languages[filetype]
 	if lang.name == "" {
-		return nil, errors.New("language not defined in languages.go")
+		errMsg := fmt.Sprintf("file extension \".%s\" not defined in languages.go", filetype)
+		return nil, errors.New(errMsg)
 	}
 
 	// create a new scanner and comment parser
