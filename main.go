@@ -1,13 +1,10 @@
+/*
+Copyright © 2022 Pax Newman <pax.newman@gmail.com>
+*/
 package main
 
-func Render() {
+import "github.com/Pax-Newman/ToView/cmd"
 
-}
-
-func View() {
-
-}
-
-func PrintRaw() {
-
+func main() {
+	cmd.Execute()
 }
