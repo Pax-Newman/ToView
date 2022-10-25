@@ -2,6 +2,7 @@ package parse
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ func newInlineParser(lang language) *regexp.Regexp {
 
 // Parse a file line by line for its comments
 // Returns a slice where index 0 = slice of TODO items, 1 = slice of FIXME items
-func LineByLine(path string) [][]item {
+func LineByLine(path string) ([][]item, error) {
 	// open file & close it on function end
 	file, err := os.Open(path)
 	if err != nil {
@@ -32,6 +33,9 @@ func LineByLine(path string) [][]item {
 
 	filetype := filepath.Ext(path)
 	lang := languages[filetype]
+	if lang.name == "" {
+		return nil, errors.New("language not defined in languages.go")
+	}
 
 	// create a new scanner and comment parser
 	scanner := bufio.NewScanner(file)
@@ -60,5 +64,5 @@ func LineByLine(path string) [][]item {
 
 	comments := [][]item{TODOs, FIXMEs}
 
-	return comments
+	return comments, nil
 }
