@@ -20,33 +20,6 @@ type item struct {
 	position int
 }
 
-// load and return text data from a given file
-func loadFileData(path string) string {
-	return ""
-}
-
-// find comments in filedata and return a list of them
-func findComments(data string, lang language) []string {
-	comments := []string{}
-
-	if lang.inline != "" {
-		inlinePattern := regexp.MustCompile(lang.inline + " *(?P<title>TODO|FIXME) *(?P<content>.*)")
-		// retreive comment data
-		inlineMatches := inlinePattern.FindAllStringSubmatch(data, -1)
-
-		for i := 0; i < len(inlineMatches); i++ {
-			match := inlineMatches[i]
-			comment := item{
-				title:    match[1],
-				content:  match[2],
-				position: -1,
-			}
-		}
-	}
-
-	return comments
-}
-
 func newInlineParser(lang language) *regexp.Regexp {
 	return regexp.MustCompile(
 		lang.inline + " *(?P<title>TODO|FIXME) *(?P<content>.*)",
