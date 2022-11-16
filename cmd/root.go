@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/Pax-Newman/toview/parse"
 	"github.com/charmbracelet/glamour"
@@ -46,6 +47,11 @@ to quickly create a Cobra application.`,
 
 		// prepare data from each file for the render
 		for _, data := range datas {
+			// skip if the struct is empty
+			// this would occur if there was an error while parsing one of the files
+			if reflect.ValueOf(data).IsZero() {
+				continue
+			}
 
 			// report the filename
 			// TODO consider if there should be a config for reporting the relative path instead
