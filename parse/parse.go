@@ -4,16 +4,21 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 )
 
-type item struct {
-	title    string
-	content  string
-	position int
+type FileData struct {
+	FilePath string
+	ToDo     []Comment
+	FixMe    []Comment
+}
+
+type Comment struct {
+	Title    string
+	Content  string
+	Position int
 }
 
 func newInlineParser(lang language) *regexp.Regexp {
@@ -24,19 +29,19 @@ func newInlineParser(lang language) *regexp.Regexp {
 
 // Parse a file line by line for its comments
 // Returns a slice where index 0 = slice of TODO items, 1 = slice of FIXME items
-func LineByLine(path string) ([][]item, error) {
+func LineByLine(path string) (FileData, error) {
 	// open file & close it on function end
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return FileData{}, err
 	}
 	defer file.Close()
 
-	filetype := filepath.Ext(path)
+	filetype := filepath.Ext(path)[1:]
 	lang := languages[filetype]
 	if lang.name == "" {
-		errMsg := fmt.Sprintf("file extension \".%s\" not defined in languages.go", filetype)
-		return nil, errors.New(errMsg)
+		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go", filetype)
+		return FileData{}, errors.New(errMsg)
 	}
 
 	// create a new scanner and comment parser
@@ -44,27 +49,33 @@ func LineByLine(path string) ([][]item, error) {
 	inlineParser := newInlineParser(lang)
 
 	// parse file line by line, adding any TODO or FIXME comments
-	TODOs := []item{}
-	FIXMEs := []item{}
+	TODOs := []Comment{}
+	FIXMEs := []Comment{}
 	pos := 1
 	for scanner.Scan() {
 		match := inlineParser.FindStringSubmatch(scanner.Text())
 
-		comment := item{
-			title:    match[1],
-			content:  match[2],
-			position: pos,
-		}
-		switch comment.title {
-		case "TODO":
-			TODOs = append(TODOs, comment)
-		case "FIXME":
-			FIXMEs = append(FIXMEs, comment)
+		if match != nil {
+			comment := Comment{
+				Title:    match[1],
+				Content:  match[2],
+				Position: pos,
+			}
+			switch comment.Title {
+			case "TODO":
+				TODOs = append(TODOs, comment)
+			case "FIXME":
+				FIXMEs = append(FIXMEs, comment)
+			}
 		}
 		pos++
 	}
 
-	comments := [][]item{TODOs, FIXMEs}
+	data := FileData{
+		FilePath: path,
+		ToDo:     TODOs,
+		FixMe:    FIXMEs,
+	}
 
-	return comments, nil
+	return data, nil
 }
