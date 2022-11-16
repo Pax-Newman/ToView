@@ -30,19 +30,28 @@ func newInlineParser(lang language) *regexp.Regexp {
 // Parse a file line by line for its comments
 // Returns a slice where index 0 = slice of TODO items, 1 = slice of FIXME items
 func LineByLine(path string) (FileData, error) {
+	filetype := filepath.Ext(path)
+	// check if the file has an extension
+	if filetype == "" {
+		errMsg := fmt.Sprintf("file \"%s\" does not have an extension and cannot be parsed\n", path)
+		return FileData{}, errors.New(errMsg)
+	} else {
+		// remove the dot from the file extension
+		filetype = filetype[1:]
+	}
+
+	lang := languages[filetype]
+	if lang.name == "" {
+		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go\n", filetype)
+		return FileData{}, errors.New(errMsg)
+	}
+
 	// open file & close it on function end
 	file, err := os.Open(path)
 	if err != nil {
 		return FileData{}, err
 	}
 	defer file.Close()
-
-	filetype := filepath.Ext(path)[1:]
-	lang := languages[filetype]
-	if lang.name == "" {
-		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go", filetype)
-		return FileData{}, errors.New(errMsg)
-	}
 
 	// create a new scanner and comment parser
 	scanner := bufio.NewScanner(file)
