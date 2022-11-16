@@ -33,7 +33,7 @@ func LineByLine(path string) (FileData, error) {
 	filetype := filepath.Ext(path)
 	// check if the file has an extension
 	if filetype == "" {
-		errMsg := fmt.Sprintf("file \"%s\" does not have an extension and cannot be parsed\n", path)
+		errMsg := fmt.Sprintf("file \"%s\" does not have an extension and cannot be parsed", path)
 		return FileData{}, errors.New(errMsg)
 	} else {
 		// remove the dot from the file extension
@@ -42,7 +42,7 @@ func LineByLine(path string) (FileData, error) {
 
 	lang := languages[filetype]
 	if lang.name == "" {
-		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go\n", filetype)
+		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go", filetype)
 		return FileData{}, errors.New(errMsg)
 	}
 
