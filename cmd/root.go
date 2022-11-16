@@ -30,14 +30,20 @@ to quickly create a Cobra application.`,
 	Args: cobra.ArbitraryArgs,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(args)
+		// check if the debug flag has been set
+		debug, err := cmd.Flags().GetBool("debug")
+		if err != nil {
+			cobra.CompErrorln(err.Error())
+		} else if debug {
+			fmt.Println(args)
+		}
 
 		datas := []parse.FileData{}
 		// parse data for each file in args
 		for _, path := range args {
 			data, err := parse.LineByLine(path)
-			if err != nil {
-				cobra.CompError(err.Error())
+			if err != nil && debug {
+				cobra.CompErrorln(err.Error())
 			}
 			datas = append(datas, data)
 		}
@@ -110,6 +116,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolP("debug", "d", false, "Enable debugging output")
 
 	// TODO add flag for "quiet output" i.e only show true output, no loading bars
 }
