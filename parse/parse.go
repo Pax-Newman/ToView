@@ -2,7 +2,6 @@ package parse
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,23 +26,26 @@ func newInlineParser(lang language) *regexp.Regexp {
 	)
 }
 
+func GetExtension(path string) (string, error) {
+	ext := filepath.Ext(path)
+	if ext == "" {
+		return "", fmt.Errorf("file \"%s\" does not have an extension and cannot be parsed", path)
+	}
+	return ext[1:], nil
+}
+
 // Parse a file line by line for its comments
-// Returns a slice where index 0 = slice of TODO items, 1 = slice of FIXME items
+//
+// Returns a FileData containing the parsed file's data
 func LineByLine(path string) (FileData, error) {
-	filetype := filepath.Ext(path)
-	// check if the file has an extension
-	if filetype == "" {
-		errMsg := fmt.Sprintf("file \"%s\" does not have an extension and cannot be parsed", path)
-		return FileData{}, errors.New(errMsg)
-	} else {
-		// remove the dot from the file extension
-		filetype = filetype[1:]
+	filetype, err := GetExtension(path)
+	if err != nil {
+		return FileData{}, err
 	}
 
-	lang := languages[filetype]
-	if lang.name == "" {
-		errMsg := fmt.Sprintf("file extension \"%s\" not defined in languages.go", filetype)
-		return FileData{}, errors.New(errMsg)
+	lang, err := GetLanguage(filetype)
+	if err != nil {
+		return FileData{}, err
 	}
 
 	// open file & close it on function end
