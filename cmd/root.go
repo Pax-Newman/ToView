@@ -74,12 +74,28 @@ var rootCmd = &cobra.Command{
 		}
 
 		// FIXME implement --flagAll into the rendering
-		flagAll, _ := cmd.Flags().GetBool("all")
+		// flagAll, _ := cmd.Flags().GetBool("all")
 
 		datas := []parse.FileData{}
 		// parse data for each file in args
+
+		// TODO move this to a config?
+		// TODO add a flag to define additional catergories?
+		categories := []parse.Category{
+			{
+				Name:        "To Do",
+				ParseTarget: "TODO",
+				Comments:    []parse.Comment{},
+			},
+			{
+				Name:        "Fix Me",
+				ParseTarget: "FIXME",
+				Comments:    []parse.Comment{},
+			},
+		}
+
 		for _, path := range args {
-			data, err := parse.LineByLine(path)
+			data, err := parse.LineByLine(path, categories)
 			if err != nil && debug {
 				cobra.CompErrorln(err.Error())
 			}
@@ -100,18 +116,19 @@ var rootCmd = &cobra.Command{
 
 			// TODO consider if there should be a config for reporting the relative path instead
 			// report the filename
-			if len(data.ToDo) <= 0 && len(data.FixMe) <= 0 {
-				if flagAll {
-					renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
-					renderStr += "### No comments to report on yet\n"
-				}
-				continue
-			}
+			// if len(data.ToDo) <= 0 && len(data.FixMe) <= 0 {
+			// 	if flagAll {
+			// 		renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
+			// 		renderStr += "### No comments to report on yet\n"
+			// 	}
+			// 	continue
+			// }
 			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
 
 			// TODO change structs so we can fetch the name of a category easily
-			renderStr += renderCategory(cmd, "To Do", data.ToDo)
-			renderStr += renderCategory(cmd, "Fix Me", data.FixMe)
+			for _, category := range data.Categories {
+				renderStr += renderCategory(cmd, category.Name, category.Comments)
+			}
 		}
 
 		// FIXME handle the err from the render method?

@@ -6,12 +6,24 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 type FileData struct {
-	FilePath string
-	ToDo     []Comment
-	FixMe    []Comment
+	FilePath   string
+	Categories []Category
+}
+
+type Category struct {
+	// name of the category to be displayed
+	Name string
+
+	// string to look for at the beginning of a comment
+	// e.g. for ToDos it should be "TODO"
+	ParseTarget string
+
+	// slice that stores the comment data for this category
+	Comments []Comment
 }
 
 type Comment struct {
@@ -20,9 +32,14 @@ type Comment struct {
 	Position int
 }
 
-func newInlineParser(lang language) *regexp.Regexp {
+func newInlineParser(lang language, categories []Category) *regexp.Regexp {
+	targets := []string{}
+	for _, category := range categories {
+		targets = append(targets, category.ParseTarget)
+	}
+	targetStr := strings.Join(targets, "|")
 	return regexp.MustCompile(
-		lang.inline + " *(?P<title>TODO|FIXME) *(?P<content>.*)",
+		lang.inline + fmt.Sprintf(" *(?P<title>%s) *(?P<content>.*)", targetStr),
 	)
 }
 
@@ -59,7 +76,7 @@ func CheckValid(path string) error {
 // Parse a file line by line for its comments
 //
 // Returns a FileData containing the parsed file's data
-func LineByLine(path string) (FileData, error) {
+func LineByLine(path string, categories []Category) (FileData, error) {
 	filetype, err := GetExtension(path)
 	if err != nil {
 		return FileData{}, err
@@ -79,11 +96,23 @@ func LineByLine(path string) (FileData, error) {
 
 	// create a new scanner and comment parser
 	scanner := bufio.NewScanner(file)
-	inlineParser := newInlineParser(lang)
+	inlineParser := newInlineParser(lang, categories)
+
+	// copy the category structs passed in
+	categoriesCopy := make([]Category, len(categories))
+	copy(categoriesCopy, categories)
+
+	data := FileData{
+		FilePath:   path,
+		Categories: categoriesCopy,
+	}
+
+	catIndexMap := map[string]int{}
+	for i, cat := range data.Categories {
+		catIndexMap[cat.ParseTarget] = i
+	}
 
 	// parse file line by line, adding any TODO or FIXME comments
-	TODOs := []Comment{}
-	FIXMEs := []Comment{}
 	pos := 1
 	for scanner.Scan() {
 		match := inlineParser.FindStringSubmatch(scanner.Text())
@@ -94,20 +123,13 @@ func LineByLine(path string) (FileData, error) {
 				Content:  match[2],
 				Position: pos,
 			}
-			switch comment.Title {
-			case "TODO":
-				TODOs = append(TODOs, comment)
-			case "FIXME":
-				FIXMEs = append(FIXMEs, comment)
-			}
+
+			// group comment into its respective category
+			catIndex := catIndexMap[comment.Title]
+			cat := data.Categories[catIndex]
+			data.Categories[catIndex].Comments = append(cat.Comments, comment)
 		}
 		pos++
-	}
-
-	data := FileData{
-		FilePath: path,
-		ToDo:     TODOs,
-		FixMe:    FIXMEs,
 	}
 
 	return data, nil
