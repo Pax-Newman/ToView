@@ -17,15 +17,10 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "toview filepath ...",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A utility to find and display ToDo items in your code",
+	Long: `toview is a CLI utility to parse files for TODO and FIXME
+	comments, rendering them in customizable markdown`,
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-
-	// TODO write custom validator to accept any number of valid supported file paths
 	// TODO add --ignore-unsupported flag to skip unsupported filetypes
 	Args: cobra.MatchAll(
 		cobra.MinimumNArgs(1),
