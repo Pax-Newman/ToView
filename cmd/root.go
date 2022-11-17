@@ -112,29 +112,9 @@ var rootCmd = &cobra.Command{
 			// TODO change structs so we can fetch the name of a category easily
 			renderStr += renderCategory(cmd, "To Do", data.ToDo)
 			renderStr += renderCategory(cmd, "Fix Me", data.FixMe)
-
-			// check for and display TODOs in the file
-			// renderStr += "## To Do\n"
-			// if len(data.ToDo) > 0 {
-			// 	for _, todo := range data.ToDo {
-			// 		renderStr += fmt.Sprintf(" - __%d:__ %s\n", todo.Position, todo.Content)
-			// 	}
-			// } else {
-			// 	renderStr += "### No ToDos to report\n"
-			// }
-
-			// check for and display FIXMEs in the file
-			// renderStr += "## Fix Me\n"
-			// if len(data.FixMe) > 0 {
-			// 	for _, fixme := range data.FixMe {
-			// 		renderStr += fmt.Sprintf(" - __%d:__ %s\n", fixme.Position, fixme.Content)
-			// 	}
-			// } else {
-			// 	renderStr += "### No FixMes to report\n"
-			// }
 		}
 
-		// FIXME handle the err from the render method
+		// FIXME handle the err from the render method?
 		// TODO allow users to set their own custom style in a config
 		out, _ := glamour.Render(renderStr, "dark")
 		fmt.Println(out)
