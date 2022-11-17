@@ -16,7 +16,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ToView",
+	Use:   "toview filepath ...",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -25,9 +25,33 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 
-	// TODO write custom validator to accept any number of valid file paths
+	// TODO write custom validator to accept any number of valid supported file paths
 	// TODO add --ignore-unsupported flag to skip unsupported filetypes
-	Args: cobra.ArbitraryArgs,
+	Args: cobra.MatchAll(
+		cobra.MinimumNArgs(1),
+		func(cmd *cobra.Command, args []string) error {
+			for _, arg := range args {
+				// check if the filepath is valid
+				_, err := os.Stat(arg)
+				if err != nil {
+					return err
+				}
+
+				// check if the file extension is valid
+				ext, err := parse.GetExtension(arg)
+				if err != nil {
+					return err
+				}
+
+				// check if the file extension is supported
+				if _, err := parse.GetLanguage(ext); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	),
 
 	Run: func(cmd *cobra.Command, args []string) {
 		// check if the debug flag has been set
