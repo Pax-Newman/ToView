@@ -162,7 +162,6 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().BoolP("debug", "d", false, "Enable debugging output")
 	rootCmd.Flags().BoolP("ignore-unsupported", "i", false, "Skips any unsupported files without stopping execution")
 	rootCmd.Flags().BoolP("all", "a", false, "Displays all files and categories even if empty")
