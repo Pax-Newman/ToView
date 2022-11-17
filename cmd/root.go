@@ -14,6 +14,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func renderCategory(cmd *cobra.Command, category string, items []parse.Comment) string {
+	// get flags
+	flagAll, _ := cmd.Flags().GetBool("all")
+
+	// init the string we'll build and return
+	renderStr := ""
+
+	// check if category is empty
+	if len(items) <= 0 {
+		if flagAll {
+			// report anyways if --all is set
+			renderStr += fmt.Sprintf("## %s\n", category)
+			renderStr += "### No comments to report\n"
+		}
+		return renderStr
+	}
+	// if there are items then populate our render string with them
+	renderStr += fmt.Sprintf("## %s\n", category)
+	for _, item := range items {
+		renderStr += fmt.Sprintf(" - __%d:__ %s\n", item.Position, item.Content)
+	}
+	return renderStr
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "toview filepath ...",
@@ -21,29 +45,23 @@ var rootCmd = &cobra.Command{
 	Long: `toview is a CLI utility to parse files for TODO and FIXME
 	comments, rendering them in customizable markdown`,
 
-	// TODO add --ignore-unsupported flag to skip unsupported filetypes
 	Args: cobra.MatchAll(
+		// ensure there is at least one arg
 		cobra.MinimumNArgs(1),
+		// ensure all of the args are valid and supported files
 		func(cmd *cobra.Command, args []string) error {
+			debug, _ := cmd.Flags().GetBool("debug")
+			if debug {
+				fmt.Printf("Args: %v\n", args)
+				cmd.DebugFlags()
+			}
+			ignore_unsupported, _ := cmd.Flags().GetBool("ignore-unsupported")
+
 			for _, arg := range args {
-				// check if the filepath is valid
-				_, err := os.Stat(arg)
-				if err != nil {
-					return err
-				}
-
-				// check if the file extension is valid
-				ext, err := parse.GetExtension(arg)
-				if err != nil {
-					return err
-				}
-
-				// check if the file extension is supported
-				if _, err := parse.GetLanguage(ext); err != nil {
+				if err := parse.CheckValid(arg); err != nil && !ignore_unsupported {
 					return err
 				}
 			}
-
 			return nil
 		},
 	),
@@ -53,9 +71,10 @@ var rootCmd = &cobra.Command{
 		debug, err := cmd.Flags().GetBool("debug")
 		if err != nil {
 			cobra.CompErrorln(err.Error())
-		} else if debug {
-			fmt.Println(args)
 		}
+
+		// FIXME implement --flagAll into the rendering
+		flagAll, _ := cmd.Flags().GetBool("all")
 
 		datas := []parse.FileData{}
 		// parse data for each file in args
@@ -70,6 +89,7 @@ var rootCmd = &cobra.Command{
 		// init the string that we will render and display
 		renderStr := ""
 
+		// TODO split rendering into multiple functions, consider breaking into another file
 		// prepare data from each file for the render
 		for _, data := range datas {
 			// skip if the struct is empty
@@ -78,35 +98,40 @@ var rootCmd = &cobra.Command{
 				continue
 			}
 
-			// report the filename
 			// TODO consider if there should be a config for reporting the relative path instead
-			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
-
-			// check if there's anything to report in the file
+			// report the filename
 			if len(data.ToDo) <= 0 && len(data.FixMe) <= 0 {
-				renderStr += "### No comments available to report\n"
+				if flagAll {
+					renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
+					renderStr += "### No comments to report on yet\n"
+				}
 				continue
 			}
+			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
+
+			// TODO change structs so we can fetch the name of a category easily
+			renderStr += renderCategory(cmd, "To Do", data.ToDo)
+			renderStr += renderCategory(cmd, "Fix Me", data.FixMe)
 
 			// check for and display TODOs in the file
-			renderStr += "## To Do\n"
-			if len(data.ToDo) > 0 {
-				for _, todo := range data.ToDo {
-					renderStr += fmt.Sprintf(" - __%d:__ %s\n", todo.Position, todo.Content)
-				}
-			} else {
-				renderStr += "### No ToDos to report\n"
-			}
+			// renderStr += "## To Do\n"
+			// if len(data.ToDo) > 0 {
+			// 	for _, todo := range data.ToDo {
+			// 		renderStr += fmt.Sprintf(" - __%d:__ %s\n", todo.Position, todo.Content)
+			// 	}
+			// } else {
+			// 	renderStr += "### No ToDos to report\n"
+			// }
 
 			// check for and display FIXMEs in the file
-			renderStr += "## Fix Me\n"
-			if len(data.FixMe) > 0 {
-				for _, fixme := range data.FixMe {
-					renderStr += fmt.Sprintf(" - __%d:__ %s\n", fixme.Position, fixme.Content)
-				}
-			} else {
-				renderStr += "### No FixMes to report\n"
-			}
+			// renderStr += "## Fix Me\n"
+			// if len(data.FixMe) > 0 {
+			// 	for _, fixme := range data.FixMe {
+			// 		renderStr += fmt.Sprintf(" - __%d:__ %s\n", fixme.Position, fixme.Content)
+			// 	}
+			// } else {
+			// 	renderStr += "### No FixMes to report\n"
+			// }
 		}
 
 		// FIXME handle the err from the render method
@@ -136,6 +161,8 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().BoolP("debug", "d", false, "Enable debugging output")
+	rootCmd.Flags().BoolP("ignore-unsupported", "i", false, "Skips any unsupported files without stopping execution")
+	rootCmd.Flags().BoolP("all", "a", false, "Displays all files and categories even if empty")
 
 	// TODO add flag for "quiet output" i.e only show true output, no loading bars
 }
