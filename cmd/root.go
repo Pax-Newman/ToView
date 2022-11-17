@@ -74,7 +74,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// FIXME implement --flagAll into the rendering
-		// flagAll, _ := cmd.Flags().GetBool("all")
+		flagAll, _ := cmd.Flags().GetBool("all")
 
 		datas := []parse.FileData{}
 		// parse data for each file in args
@@ -116,17 +116,23 @@ var rootCmd = &cobra.Command{
 
 			// TODO consider if there should be a config for reporting the relative path instead
 			// report the filename
-			// if len(data.ToDo) <= 0 && len(data.FixMe) <= 0 {
-			// 	if flagAll {
-			// 		renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
-			// 		renderStr += "### No comments to report on yet\n"
-			// 	}
-			// 	continue
-			// }
+
+			hasItems := []parse.Category{}
+			for _, category := range data.Categories {
+				if len(category.Comments) > 0 {
+					hasItems = append(hasItems, category)
+				}
+			}
+			if len(hasItems) <= 0 {
+				if flagAll {
+					renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
+					renderStr += "### No comments to report on yet\n"
+				}
+				continue
+			}
 			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
 
-			// TODO change structs so we can fetch the name of a category easily
-			for _, category := range data.Categories {
+			for _, category := range hasItems {
 				renderStr += renderCategory(cmd, category.Name, category.Comments)
 			}
 		}
