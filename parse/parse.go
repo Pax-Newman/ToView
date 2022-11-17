@@ -34,6 +34,28 @@ func GetExtension(path string) (string, error) {
 	return ext[1:], nil
 }
 
+// Check if a file is valid, supported, and exists
+func CheckValid(path string) error {
+	// check if the filepath is valid
+	_, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	// check if the file extension is valid
+	ext, err := GetExtension(path)
+	if err != nil {
+		return err
+	}
+
+	// check if the file extension is supported
+	if _, err := GetLanguage(ext); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Parse a file line by line for its comments
 //
 // Returns a FileData containing the parsed file's data
