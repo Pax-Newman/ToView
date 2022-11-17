@@ -132,7 +132,7 @@ var rootCmd = &cobra.Command{
 			}
 			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
 
-			for _, category := range hasItems {
+			for _, category := range data.Categories {
 				renderStr += renderCategory(cmd, category.Name, category.Comments)
 			}
 		}
