@@ -115,6 +115,7 @@ func LineByLine(path string, categories []Category) (FileData, error) {
 	// parse file line by line, adding any TODO or FIXME comments
 	pos := 1
 	for scanner.Scan() {
+		// TODO handle languages that have start/end comment markers
 		match := inlineParser.FindStringSubmatch(scanner.Text())
 
 		if match != nil {

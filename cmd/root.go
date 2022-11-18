@@ -51,7 +51,7 @@ var rootCmd = &cobra.Command{
 		datas := []parse.FileData{}
 		// parse data for each file in args
 
-		// TODO move this to a config?
+		// TODO move category definiions to a config?
 		// TODO add a flag to define additional catergories?
 		categories := []parse.Category{
 			{
@@ -77,7 +77,6 @@ var rootCmd = &cobra.Command{
 		// init the string that we will render and display
 		renderStr := ""
 
-		// TODO split rendering into multiple functions, consider breaking into another file
 		// prepare data from each file for the render
 		for _, data := range datas {
 			renderStr += render.RenderFile(cmd, data)
