@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"reflect"
 
 	"github.com/Pax-Newman/toview/parse"
 	"github.com/Pax-Newman/toview/render"
@@ -50,9 +48,6 @@ var rootCmd = &cobra.Command{
 			cobra.CompErrorln(err.Error())
 		}
 
-		// FIXME implement --flagAll into the rendering
-		flagAll, _ := cmd.Flags().GetBool("all")
-
 		datas := []parse.FileData{}
 		// parse data for each file in args
 
@@ -85,33 +80,7 @@ var rootCmd = &cobra.Command{
 		// TODO split rendering into multiple functions, consider breaking into another file
 		// prepare data from each file for the render
 		for _, data := range datas {
-			// skip if the struct is empty
-			// this would occur if there was an error while parsing one of the files
-			if reflect.ValueOf(data).IsZero() {
-				continue
-			}
-
-			// TODO consider if there should be a config for reporting the relative path instead
-			// report the filename
-
-			hasItems := []parse.Category{}
-			for _, category := range data.Categories {
-				if len(category.Comments) > 0 {
-					hasItems = append(hasItems, category)
-				}
-			}
-			if len(hasItems) <= 0 {
-				if flagAll {
-					renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
-					renderStr += "### No comments to report on yet\n"
-				}
-				continue
-			}
-			renderStr += fmt.Sprintf("# %s\n", filepath.Base(data.FilePath))
-
-			for _, category := range data.Categories {
-				renderStr += render.RenderCategory(cmd, category.Name, category.Comments)
-			}
+			renderStr += render.RenderFile(cmd, data)
 		}
 
 		// FIXME handle the err from the render method?
