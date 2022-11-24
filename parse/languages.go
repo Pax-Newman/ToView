@@ -12,6 +12,7 @@ type language struct {
 	blockEnd   string
 }
 
+// TODO consider moving this to a config file so custom definitions can be added easily
 var languages = map[string]language{
 	"py": {
 		name:       "Python",

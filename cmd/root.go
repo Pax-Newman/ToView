@@ -112,4 +112,6 @@ func init() {
 	rootCmd.Flags().BoolP("all", "a", false, "Displays all files and categories even if empty")
 
 	// TODO add flag for "quiet output" i.e only show true output, no loading bars
+
+	// TODO add a command for raw output without any styling
 }
