@@ -113,5 +113,9 @@ func init() {
 
 	// TODO add flag for "quiet output" i.e only show true output, no loading bars
 
-	// TODO add a command for raw output without any styling
+	// TODO add a flag for raw output without any styling
+
+	// TODO add a command to output to a file
+	// TODO add a flag to render each file's data to a seperate md file
+	// i.e. toview render -s/--seperate main.go commands.go ---> main.md commands.md
 }
