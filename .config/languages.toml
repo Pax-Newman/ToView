@@ -1,5 +1,4 @@
 # Language parsing definitions
-[languages]
 
 # To add a new language you can follow this template:
 # [languages.$EXT]  --- Replace $EXT with whatever the language's file extension is 
@@ -10,6 +9,8 @@
 
 # If you add support for a language, please submit a pull request
 # to https://github.com/Pax-Newman/ToView with your changes
+
+[languages]
 
 [languages.py]
 name = "Python"

@@ -1,0 +1,17 @@
+# ToView Configuration Settings
+
+# Category Definitions
+[categories]
+
+[categories.TODO]
+name = "To Do"
+parsetarget = "TODO"
+
+[categories.FIXME]
+name = "Fix Me"
+parsetarget = "FIXME"
+
+# Style Definitions
+[styles]
+
+[styles.dark]

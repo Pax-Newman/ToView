@@ -5,10 +5,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
-	"github.com/Pax-Newman/toview/parse"
-	"github.com/Pax-Newman/toview/render"
+	"github.com/Pax-Newman/toview/internal/configuration"
+	"github.com/Pax-Newman/toview/internal/parse"
+	"github.com/Pax-Newman/toview/internal/render"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +43,8 @@ var rootCmd = &cobra.Command{
 		},
 	),
 
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+
 		// check if the debug flag has been set
 		debug, err := cmd.Flags().GetBool("debug")
 		if err != nil {
@@ -66,8 +69,13 @@ var rootCmd = &cobra.Command{
 			},
 		}
 
+		config, err := configuration.LoadConfig("config.toml")
+		if err != nil {
+			return err
+		}
+
 		for _, path := range args {
-			data, err := parse.LineByLine(path, categories)
+			data, err := parse.LineByLine(path, categories, config)
 			if err != nil && debug {
 				cobra.CompErrorln(err.Error())
 			}
@@ -84,8 +92,11 @@ var rootCmd = &cobra.Command{
 
 		// FIXME handle the err from the render method?
 		// TODO allow users to set their own custom style in a config
+		// TODO consider replacing glamour with lipgloss for custom styling
 		out, _ := glamour.Render(renderStr, "dark")
 		fmt.Println(out)
+
+		return nil
 	},
 }
 
@@ -99,6 +110,13 @@ func Execute() {
 }
 
 func init() {
+	// initialize the languages.toml config
+	err := parse.Init()
+	if err != nil {
+		log.Fatal(err.Error())
+		os.Exit(1)
+	}
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -118,4 +136,5 @@ func init() {
 	// TODO add a command to output to a file
 	// TODO add a flag to render each file's data to a seperate md file
 	// i.e. toview render -s/--seperate main.go commands.go ---> main.md commands.md
+	// TODO add --style flag for specifying which style to use
 }
