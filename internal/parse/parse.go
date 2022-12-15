@@ -9,24 +9,7 @@ import (
 
 	"github.com/Pax-Newman/toview/internal/configuration"
 	"github.com/Pax-Newman/toview/internal/filehelpers"
-	"github.com/spf13/viper"
 )
-
-type Language struct {
-	Name       string
-	Inline     string
-	BlockStart string
-	BlockEnd   string
-}
-
-// defines an error when trying to accces a filetype that is not yet supported
-type NotSupportedError struct {
-	Filetype string
-}
-
-func (e NotSupportedError) Error() string {
-	return fmt.Sprintf("file extension \"%s\" not currently supported", e.Filetype)
-}
 
 // Holds data relating to the data parsed from a file
 type FileData struct {
@@ -54,64 +37,64 @@ type Comment struct {
 	Position int
 }
 
+type Language struct {
+	Name       string
+	Inline     string
+	BlockStart string
+	BlockEnd   string
+}
+
 type LanguageConfig struct {
 	Languages map[string]Language
 }
 
-var languages LanguageConfig
-
-// Initialize the language definitions from the config file
-func Init() error {
-	// config, err := configuration.LoadConfig("languages.toml")
-	// if err != nil {
-	// 	return err
-	// }
-	// config.Unmarshal(&languages)
-	// return nil
-	var err error
-	languages, err = configuration.UnmarshalFromConfig[LanguageConfig]("languages.toml")
-
-	return err
+// defines an error when trying to accces a filetype that is not yet supported
+type NotSupportedError struct {
+	Filetype string
 }
 
-func newInlineParser(lang Language, categories []Category) *regexp.Regexp {
+func (e NotSupportedError) Error() string {
+	return fmt.Sprintf("file extension \"%s\" not currently supported", e.Filetype)
+}
+
+type Parser struct {
+	languages map[string]Language
+	parsers   map[string]*regexp.Regexp
+}
+
+func InitParser() (*Parser, error) {
+	languages, err := configuration.UnmarshalFromPath[LanguageConfig]("languages.toml")
+	if err != nil {
+		return nil, err
+	}
+
+	parser := Parser{
+		languages: languages.Languages,
+		parsers:   map[string]*regexp.Regexp{},
+	}
+	return &parser, nil
+}
+
+func (p *Parser) newInlineParser(lang Language, categories []Category) *regexp.Regexp {
+	// Create a regex string containing all category target strings e.g. TODO|FIXME
 	targets := []string{}
 	for _, category := range categories {
 		targets = append(targets, category.ParseTarget)
 	}
 	targetStr := strings.Join(targets, "|")
-	return regexp.MustCompile(
+
+	// add the new language regex parser to the Parser object's parsers map
+	p.parsers[lang.Name] = regexp.MustCompile(
 		lang.Inline + fmt.Sprintf(" *(?P<title>%s) *(?P<content>.*)", targetStr),
 	)
-}
-
-// Check if a file is valid, supported, and exists
-func CheckValid(path string) error {
-	// check if the filepath is valid
-	_, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	// check if the file extension is valid
-	ext, err := filehelpers.GetExtension(path)
-	if err != nil {
-		return err
-	}
-
-	// check if the file extension is supported
-	if _, err := GetLanguage(ext); err != nil {
-		return err
-	}
-
-	return nil
+	return p.parsers[lang.Name]
 }
 
 // Returns an error if the filetype is not defined in languages var, nil otherwise
-func GetLanguage(filetype string) (Language, error) {
-	lang := languages.Languages[filetype]
+func (p *Parser) GetLanguage(filetype string) (Language, error) {
+	lang, exists := p.languages[filetype]
 
-	if lang.Name == "" {
+	if !exists {
 		return Language{}, NotSupportedError{filetype}
 	}
 	return lang, nil
@@ -120,13 +103,13 @@ func GetLanguage(filetype string) (Language, error) {
 // Parse a file line by line for its comments
 //
 // Returns a FileData containing the parsed file's data
-func LineByLine(path string, categories []Category, languages *viper.Viper) (FileData, error) {
+func (p *Parser) LineByLine(path string, categories []Category) (FileData, error) {
 	filetype, err := filehelpers.GetExtension(path)
 	if err != nil {
 		return FileData{}, err
 	}
 
-	lang, err := GetLanguage(filetype)
+	lang, err := p.GetLanguage(filetype)
 	if err != nil {
 		return FileData{}, err
 	}
@@ -140,7 +123,11 @@ func LineByLine(path string, categories []Category, languages *viper.Viper) (Fil
 
 	// create a new scanner and comment parser
 	scanner := bufio.NewScanner(file)
-	inlineParser := newInlineParser(lang, categories)
+	inlineParser, exists := p.parsers[lang.Name]
+	if !exists {
+		// create a new parser if we don't already have one for this language
+		inlineParser = p.newInlineParser(lang, categories)
+	}
 
 	// copy the category structs passed in
 	categoriesCopy := make([]Category, len(categories))

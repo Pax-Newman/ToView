@@ -2,6 +2,7 @@ package filehelpers
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -18,4 +19,21 @@ func GetExtension(path string) (string, error) {
 		return "", fmt.Errorf("file \"%s\" does not have an extension and cannot be parsed", path)
 	}
 	return ext[1:], nil
+}
+
+// Check if a file is valid, supported, and exists
+func CheckValid(path string) error {
+	// check if the filepath is valid
+	_, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	// check if the file extension is valid
+	_, err = GetExtension(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -5,10 +5,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/Pax-Newman/toview/internal/configuration"
+	"github.com/Pax-Newman/toview/internal/filehelpers"
 	"github.com/Pax-Newman/toview/internal/parse"
 	"github.com/Pax-Newman/toview/internal/render"
 	"github.com/charmbracelet/glamour"
@@ -27,6 +26,7 @@ var rootCmd = &cobra.Command{
 		cobra.MinimumNArgs(1),
 		// ensure all of the args are valid and supported files
 		func(cmd *cobra.Command, args []string) error {
+			// check if the debug flag is on
 			debug, _ := cmd.Flags().GetBool("debug")
 			if debug {
 				fmt.Printf("Args: %v\n", args)
@@ -34,8 +34,20 @@ var rootCmd = &cobra.Command{
 			}
 			ignore_unsupported, _ := cmd.Flags().GetBool("ignore-unsupported")
 
+			// init a parser so we can check what languages are suppported
+			parser, err := parse.InitParser()
+			if err != nil {
+				return err
+			}
+
 			for _, arg := range args {
-				if err := parse.CheckValid(arg); err != nil && !ignore_unsupported {
+				// check if the file exists and has an extension
+				if err := filehelpers.CheckValid(arg); err != nil {
+					return err
+				}
+				// check if the file is supported
+				ext, _ := filehelpers.GetExtension(arg)
+				if _, err := parser.GetLanguage(ext); err != nil && !ignore_unsupported {
 					return err
 				}
 			}
@@ -69,13 +81,15 @@ var rootCmd = &cobra.Command{
 			},
 		}
 
-		config, err := configuration.LoadConfig("config.toml")
+		parser, err := parse.InitParser()
 		if err != nil {
 			return err
 		}
 
+		// parse each file given to us
 		for _, path := range args {
-			data, err := parse.LineByLine(path, categories, config)
+			data, err := parser.LineByLine(path, categories)
+			// print parsing errors if our debug flag is set
 			if err != nil && debug {
 				cobra.CompErrorln(err.Error())
 			}
@@ -110,12 +124,6 @@ func Execute() {
 }
 
 func init() {
-	// initialize the languages.toml config
-	err := parse.Init()
-	if err != nil {
-		log.Fatal(err.Error())
-		os.Exit(1)
-	}
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

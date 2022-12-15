@@ -42,7 +42,7 @@ func LoadConfig(path string) (*viper.Viper, error) {
 }
 
 // Unmarshals from a path into a generic struct which it then returns
-func UnmarshalFromConfig[T interface{}](path string) (T, error) {
+func UnmarshalFromPath[T interface{}](path string) (T, error) {
 	var newType T
 
 	config, err := LoadConfig(path)
