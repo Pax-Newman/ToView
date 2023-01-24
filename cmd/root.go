@@ -7,12 +7,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Pax-Newman/toview/internal/configuration"
 	"github.com/Pax-Newman/toview/internal/filehelpers"
 	"github.com/Pax-Newman/toview/internal/parse"
 	"github.com/Pax-Newman/toview/internal/render"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )
+
+type config struct {
+	Categories map[string]parse.Category
+	Styles     map[string]render.Style
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -63,23 +69,19 @@ var rootCmd = &cobra.Command{
 			cobra.CompErrorln(err.Error())
 		}
 
-		datas := []parse.FileData{}
-		// parse data for each file in args
-
-		// TODO move category definiions to a config?
-		// TODO add a flag to define additional catergories?
-		categories := []parse.Category{
-			{
-				Name:        "To Do",
-				ParseTarget: "TODO",
-				Comments:    []parse.Comment{},
-			},
-			{
-				Name:        "Fix Me",
-				ParseTarget: "FIXME",
-				Comments:    []parse.Comment{},
-			},
+		// Load our config file
+		// TODO create a config file if one doesn't exist
+		config, err := configuration.UnmarshalFromPath[config]("config.toml")
+		if err != nil {
+			cobra.CompErrorln(err.Error())
 		}
+
+		// Load our categories from config
+		categories := []parse.Category{}
+		for _, cat := range config.Categories {
+			categories = append(categories, cat)
+		}
+		filedatas := []parse.FileData{}
 
 		parser, err := parse.InitParser()
 		if err != nil {
@@ -93,14 +95,14 @@ var rootCmd = &cobra.Command{
 			if err != nil && debug {
 				cobra.CompErrorln(err.Error())
 			}
-			datas = append(datas, data)
+			filedatas = append(filedatas, data)
 		}
 
 		// init the string that we will render and display
 		renderStr := ""
 
 		// prepare data from each file for the render
-		for _, data := range datas {
+		for _, data := range filedatas {
 			renderStr += render.RenderFile(cmd, data)
 		}
 
