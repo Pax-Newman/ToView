@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type Style struct{}
+
 func RenderCategory(cmd *cobra.Command, category string, items []parse.Comment) string {
 	// get flags
 	flagAll, _ := cmd.Flags().GetBool("all")
