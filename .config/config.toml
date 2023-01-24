@@ -3,6 +3,12 @@
 # Category Definitions
 [categories]
 
+# To add a new category you can follow this template:
+# [categories.$TYPE]  --- Replace $TYPE with the name of the category
+# name = ""           --- The name that will be rendered in the output
+# parsetarget = ""    --- What the parser should look for in a comment to determine this category
+#                         Example: in the comment "//FIXME make this work", the parsetarget is "FIXME"                                 
+
 [categories.TODO]
 name = "To Do"
 parsetarget = "TODO"
