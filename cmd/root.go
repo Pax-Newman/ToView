@@ -109,8 +109,14 @@ var rootCmd = &cobra.Command{
 		// FIXME handle the err from the render method?
 		// TODO allow users to set their own custom style in a config
 		// TODO consider replacing glamour with lipgloss for custom styling
-		out, _ := glamour.Render(renderStr, "dark")
-		fmt.Println(out)
+
+		raw, _ := cmd.Flags().GetBool("raw")
+		if raw {
+			fmt.Println(renderStr)
+		} else {
+			out, _ := glamour.Render(renderStr, "dark")
+			fmt.Println(out)
+		}
 
 		return nil
 	},
@@ -142,6 +148,7 @@ func init() {
 	// TODO add flag for "quiet output" i.e only show true output, no loading bars
 
 	// TODO add a flag for raw output without any styling
+	rootCmd.Flags().BoolP("raw", "r", false, "Output raw text without styling")
 
 	// TODO add a command to output to a file
 	// TODO add a flag to render each file's data to a seperate md file
