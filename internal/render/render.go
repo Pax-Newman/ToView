@@ -11,6 +11,52 @@ import (
 
 type Style struct{}
 
+// type Style struct {
+// 	FilePrefix     string
+// 	FileForeground string
+// 	FileBackground string
+// 	FileModifier   string
+
+// 	CategoryPrefix     string
+// 	CategoryForeground string
+// 	CategoryBackground string
+// 	CategoryModifier   string
+
+// 	ItemPrefix          string
+// 	ItemForeground      string
+// 	ItemBackground      string
+// 	ItemModifier        string
+// 	ItemContentModifier string
+
+// 	lipglossStyle lipgloss.Style
+// }
+
+// var DefaultStyle Style = Style{
+// 	FilePrefix:     "#",
+// 	FileForeground: "#FFFFFF",
+// 	FileBackground: "none",
+// 	FileModifier:   "none",
+
+// 	CategoryPrefix:     "##",
+// 	CategoryForeground: "#FFFFFF",
+// 	CategoryBackground: "none",
+// 	CategoryModifier:   "*",
+
+// 	ItemPrefix:          "-",
+// 	ItemForeground:      "#FFFFFF",
+// 	ItemBackground:      "none",
+// 	ItemModifier:        "bold",
+// 	ItemContentModifier: "none",
+// }
+
+// func (s *Style) RenderItem(item parse.Comment) string {
+// 	renderStr := ""
+// 	renderStr += s.ItemPrefix
+// 	renderStr += fmt.Sprintf("%s%d%s", s.ItemModifier, item.Position, s.ItemModifier)
+// 	renderStr += fmt.Sprintf(": %s\n", item.Content)
+// 	return renderStr
+// }
+
 func RenderCategory(cmd *cobra.Command, category string, items []parse.Comment) string {
 	// get flags
 	flagAll, _ := cmd.Flags().GetBool("all")
