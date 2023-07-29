@@ -150,7 +150,12 @@ func init() {
 	// TODO add a flag for raw output without any styling
 	rootCmd.Flags().BoolP("raw", "r", false, "Output raw text without styling")
 
-	// TODO add a command to output to a file
+	// TODO add a command or flag that renders any file with a given extension
+	// example: toview --lang py
+	// this would render all files with the python extension
+
+	// TODO add a -r recursive flag to also search/render files in subdirs
+
 	// TODO add a flag to render each file's data to a seperate md file
 	// i.e. toview render -s/--seperate main.go commands.go ---> main.md commands.md
 	// TODO add --style flag for specifying which style to use
